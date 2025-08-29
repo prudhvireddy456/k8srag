@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes RAG</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+    </style>
+    <script>
+        async function askQuestion() {
+            const question = document.getElementById("question").value;
+            const responseDiv = document.getElementById("response");
+            responseDiv.innerHTML = "Loading...";
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/api/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+                if (data.answer) {
+                    responseDiv.innerHTML = `<strong>Answer:</strong> ${data.answer}`;
+                } else if (data.error) {
+                    responseDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<strong>Error:</strong> Unable to connect to the server.`;
+            }
+        }
+
+        async function checkHealth() {
+            const healthDiv = document.getElementById("health-status");
+            healthDiv.innerHTML = "Checking...";
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/api/health");
+                const data = await response.json();
+                if (data.status == "ok") {
+                    healthDiv.innerHTML = "API is running.";
+                } else {
+                    healthDiv.innerHTML = "API is not running.";
+                }
+            } catch (error) {
+                healthDiv.innerHTML = "Unable to connect to the API.";
+            }
+        }
+
+        // Check API health on page load
+        window.onload = checkHealth;
+    </script>
+</head>
+<body>
+    <h1>Kubernetes RAG</h1>
+    <p id="health-status" style="color: green;">Checking API health...</p>
+    <hr>
+    <p>Ask a question about Kubernetes:</p>
+    <input type="text" id="question" placeholder="Enter your question" style="width: 300px;">
+    <button onclick="askQuestion()">Ask</button>
+    <div id="response"></div>
+</body>
+</html>
